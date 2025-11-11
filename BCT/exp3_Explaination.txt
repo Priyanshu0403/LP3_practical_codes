@@ -1,0 +1,142 @@
+
+This Solidity smart contract, named SimpleBank, provides basic banking functionalities like depositing, withdrawing, and checking the balance for users on the Ethereum blockchain.
+
+Code Explanation
+1. Structure and State 
+
+The contract begins by specifying the license and the compatible compiler version:
+
+-SPDX-License-Identifier: MIT: This line declares the code is open-source under the MIT License.
+-pragma solidity >=0.6.2 <0.9.0;: This directive ensures the code compiles with Solidity versions between 0.6.2 and 0.9.0.
+-contract SimpleBank: This defines the core smart contract.
+
+The contract stores all necessary data in a single state variable:
+-mapping (address => uint) private balances;: This mapping serves as the internal ledger. It maps every user's unique address to their corresponding balance, which is stored as an unsigned integer (uint). The private keyword restricts access at the Application Binary Interface (ABI) level, though all data on the blockchain is inherently public.
+
+2. Core Functions
+deposit Function
+Solidity
+
+function deposit(uint amount) public returns (uint) {
+    balances[msg.sender] += amount;
+    return balances[msg.sender];
+}
+-The function takes an amount as an argument.
+-It is declared public, meaning anyone can call it.
+-balances[msg.sender] += amount;: This line adds the specified amount to the balance of the user who initiated the transaction (msg.sender).
+-Crucial Note: For a real-world bank contract, this function should be marked payable and should use msg.value (the actual Ether sent) instead of an arbitrary amount argument to ensure the internal balance matches the received Ether.
+
+withdraw Function
+Solidity
+
+function withdraw(uint withdrawAmount) public returns (uint remainingBal) {
+    if (withdrawAmount <= balances[msg.sender]) {
+        balances[msg.sender] -= withdrawAmount;
+    }
+    return balances[msg.sender];
+}
+-The function takes the withdrawAmount requested by the user.
+-Safety Check: The if statement checks that the user's current balance is greater than or equal to the withdrawAmount before proceeding.
+-Balance Update: If the check passes, the internal balances mapping is updated by subtracting the withdrawal amount.
+-The function then returns the remaining balance.
+
+Crucial Note: A fully functional withdrawal would require a line (e.g., msg.sender.transfer(withdrawAmount)) to transfer the actual Ether out of the contract and back to the user. This simplified contract only updates the internal ledger.
+
+balance Function
+Solidity
+function balance() public view returns (uint) {
+    return balances[msg.sender];
+}
+This function allows any caller to check their own balance.
+
+It is declared public view, which means it does not modify the contract's state. Functions marked view are generally free to call externally.
+
+It returns the balances associated with the caller's msg.sender address.
+
+❓ Viva Questions and Answers
+Basic and Intermediate Concepts
+Q1: What is the difference between a view function and a standard function (like deposit)?
+A: A view function reads the state of the blockchain but does not modify it. Since it doesn't modify the state, calling it externally is free and does not cost gas. A standard function like deposit modifies the state (updates the balances mapping)  and therefore costs gas.
+
+Q2: In the line balances[msg.sender] += amount;, what are msg.sender and balances?
+A: msg.sender is a global variable that holds the Ethereum address of the account or contract that initiated the current function call. balances is the state variable mapping that stores the ledger of user addresses to their integer balances.
+
+Q3: What does the uint data type represent, and why is it used for money in Solidity?
+A: uint stands for unsigned integer, meaning it can only store zero or positive whole numbers. It is used for money to prevent potential underflow errors that could result from using negative numbers, ensuring that all balances and amounts are non-negative.
+
+Q4: Explain the purpose of the pragma statement in this code.
+A: The pragma statement, specifically pragma solidity >=0.6.2 <0.9.0; , instructs the compiler that the contract should only be compiled by a version of the Solidity compiler within the specified range. This ensures compatibility with the syntax and features used in the code.
+
+Advanced Concepts and Security
+Q5: What critical keyword is missing from the deposit function if it were intended to receive actual Ether?
+A: The payable keyword is missing. Functions must be explicitly marked payable to accept Ether transfers sent with a transaction. Without it, any transaction attempting to send Ether to the function will fail and revert.
+
+Q6: Why is the if check in the withdraw function important, and what programming principle does it uphold?
+A: The check (if (withdrawAmount <= balances[msg.sender])) is a critical security measure that prevents underflow and ensures a user cannot withdraw more funds than they possess. This upholds the principle of Checks-Effects-Interactions (though it should be done before any external call if a transfer were present) by checking constraints first.
+
+Q7: If an external hacker somehow exploited a vulnerability, could they directly access the balances of other users?
+A: No, not directly through the contract's ABI interface because the balances mapping is declared as private. However, since the Ethereum blockchain is a public ledger, any determined party can still read the storage slot where the data is kept using off-chain tools, meaning "private" only restricts contract-level access, not true data visibility.
+
+Q8: Assuming the withdraw function were corrected to include an external transfer, where in the function should that transfer occur to help prevent a Reentrancy Attack?
+A: The transfer call must occur after the contract's internal state is updated. In the existing structure, the line balances[msg.sender] -= withdrawAmount;  should execute before the external call. This follows the Checks-Effects-Interactions pattern, ensuring the user's balance is debited before they receive the funds, preventing a malicious contract from recursively calling withdraw again.
+
+
+
+######################  RUN  ###############################
+Your file Exp3.sol looks like a Solidity file (used for smart contracts on Ethereum).
+Here’s how you can run or test it depending on what you want to do 👇
+
+🧩 Option 1: Run it online (easiest way)
+
+Go to 👉 https://remix.ethereum.org
+
+In the left sidebar, click File Explorer → Upload File
+
+Upload your Exp3.sol
+
+Click the file to open it
+
+Go to the Solidity Compiler tab (left side), choose a suitable compiler version (e.g., 0.8.x)
+
+Click Compile Exp3.sol
+
+Then go to the Deploy & Run Transactions tab
+
+Select an environment:
+
+JavaScript VM = runs locally in your browser (best for testing)
+
+Injected Provider (MetaMask) = connects to your wallet
+
+Hardhat / Ganache = for local blockchain
+
+Click Deploy
+
+You’ll see your contract appear below — now you can call its functions directly from the Remix UI.
+
+⚙️ Option 2: Run locally using Hardhat (for developers)
+
+If you want to run it on your local machine:
+
+Install Node.js
+
+Open a terminal and run:
+
+npm install --save-dev hardhat
+npx hardhat
+
+
+Choose Create a JavaScript project
+
+Copy your Exp3.sol into the contracts/ folder
+
+Edit hardhat.config.js if you need a specific compiler version
+
+Compile your contract:
+
+npx hardhat compile
+
+
+Deploy or test using scripts in the scripts/ folder:
+
+npx hardhat run scripts/deploy.js
